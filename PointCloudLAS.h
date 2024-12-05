@@ -1,9 +1,10 @@
+#pragma once
+
 #include <io/LasReader.hpp>
 #include <pdal/Writer.hpp>
 #include <pdal/Streamable.hpp>
 #include <pdal/PointView.hpp>
 #include <pdal/util/ProgramArgs.hpp>
-
 #include <iostream>
 
 namespace pdal
@@ -19,7 +20,7 @@ class PDAL_EXPORT StreamProcessor: public Writer, public Streamable
 
 public:
     std::string getName() const;
-    StreamProcessor();
+    StreamProcessor(std::vector<Eigen::Vector3f>* points);
     ~StreamProcessor();
 
 private:
@@ -32,11 +33,14 @@ private:
     StreamProcessor& operator=(const StreamProcessor&) = delete;
     StreamProcessor(const StreamProcessor&) = delete;
     StreamProcessor(const StreamProcessor&&) = delete;
+    std::vector<Eigen::Vector3f>* _points;
 };
 
 std::string StreamProcessor::getName() const { return "sample streamer"; }
 
-StreamProcessor::StreamProcessor() {}
+StreamProcessor::StreamProcessor(std::vector<Eigen::Vector3f>* points):
+    _points(points)
+ {}
 
 StreamProcessor::~StreamProcessor() {}
 
@@ -51,6 +55,7 @@ void StreamProcessor::initialize()
 // This will be called for each point in the cloud.
 bool StreamProcessor::processOne(PointRef& point)
 {
+    /*
     std::cout << "Point: " 
     << "GpsTime: " << point.getFieldAs<double>(Dimension::Id::GpsTime) <<  '\t' 
     //<< "has X: " << point.hasDim(Dimension::Id::X) <<  '\t' 
@@ -64,6 +69,14 @@ bool StreamProcessor::processOne(PointRef& point)
     << "NormalY: " << point.getFieldAs<double>(Dimension::Id::NormalY) << '\t' 
     << "NormalZ: " << point.getFieldAs<double>(Dimension::Id::NormalZ)
     << std::endl;
+    */
+
+    Eigen::Vector3f p;
+    p[0] = point.getFieldAs<double>(Dimension::Id::X);
+    p[1] = point.getFieldAs<double>(Dimension::Id::Y);
+    p[2] = point.getFieldAs<double>(Dimension::Id::Z);
+   _points->push_back(p);
+
     return true;  
 }
 
@@ -76,7 +89,7 @@ void StreamProcessor::writeView(const PointViewPtr view)
 }
 
 } // namespace pdal
-
+/*
 int main(int argc, char* argv[])
 {
  
@@ -107,3 +120,4 @@ int main(int argc, char* argv[])
     
     return 0;
 }
+*/
