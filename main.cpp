@@ -2,16 +2,32 @@
 
 
 int main(int argc, char** argv) {
-  size_t thinner = 1;
-  if(argc == 2)
+
+  Mode mode = POINTS;
+  std::string fn;
+  if(argc == 3)
   {
-    thinner = std::atoi(argv[1]);
-    if(!thinner) thinner = 1;
+    std::string smode = argv[1];
+    if(smode == "points")
+      mode = POINTS;
+    else if(smode == "normals")
+      mode = NORMALS;
+    else if(smode == "intensities")
+      mode = INTENSITIES;
+    else
+      mode = POINTS;
+
+    std::string filename = argv[2];
+    PointCloudPLY editor{mode, filename};
+
   }
-  if(thinner != 1)
-    std::cout << " thinner = " << thinner << std::endl; 
-  
-  PointCloudPLY editor{thinner};
-  
+  else
+  {
+    std::cout << " Expected ./PointCloudViewer [points | normals | intensities] [filename.las | filename.ply]  " << std::endl;
+  }
+
+
+
+
   return 0;
 }

@@ -20,7 +20,7 @@ class PDAL_EXPORT StreamProcessor: public Writer, public Streamable
 
 public:
     std::string getName() const;
-    StreamProcessor(std::vector<Eigen::Vector3f>* points);
+    StreamProcessor(std::vector<Eigen::Vector3f>* points, std::vector<Eigen::Vector3f>* normals, std::vector<double>* intens);
     ~StreamProcessor();
 
 private:
@@ -34,12 +34,15 @@ private:
     StreamProcessor(const StreamProcessor&) = delete;
     StreamProcessor(const StreamProcessor&&) = delete;
     std::vector<Eigen::Vector3f>* _points;
+    std::vector<Eigen::Vector3f>* _normals;
+    std::vector<double>* _intens;
+
 };
 
 std::string StreamProcessor::getName() const { return "sample streamer"; }
 
-StreamProcessor::StreamProcessor(std::vector<Eigen::Vector3f>* points):
-    _points(points)
+StreamProcessor::StreamProcessor(std::vector<Eigen::Vector3f>* points, std::vector<Eigen::Vector3f>* normals, std::vector<double>* intens):
+    _points(points),_normals(normals),_intens(intens)
  {}
 
 StreamProcessor::~StreamProcessor() {}
@@ -77,6 +80,16 @@ bool StreamProcessor::processOne(PointRef& point)
     p[2] = point.getFieldAs<double>(Dimension::Id::Z);
    _points->push_back(p);
 
+    Eigen::Vector3f n;
+    n[0] = point.getFieldAs<double>(Dimension::Id::NormalX);
+    n[1] = point.getFieldAs<double>(Dimension::Id::NormalY);
+    n[2] = point.getFieldAs<double>(Dimension::Id::NormalZ);
+   _normals->push_back(n);
+
+    double i;
+    i = point.getFieldAs<double>(Dimension::Id::Intensity);
+    _intens->push_back(i);
+
     return true;  
 }
 
@@ -89,35 +102,3 @@ void StreamProcessor::writeView(const PointViewPtr view)
 }
 
 } // namespace pdal
-/*
-int main(int argc, char* argv[])
-{
- 
-    using namespace pdal;
-    
-    // Set the input point cloud    
-    Options read_options;
-    //read_options.add("filename", "myfile.las");
-    read_options.add("filename", "another_las.las");
-    LasReader reader;
-    reader.setOptions(read_options);
-
-    // buf_size is the number of points that will be
-    // processed and kept in this table at the same time. 
-    // A somewhat bigger value may result in some efficiencies.
-    int buf_size = 100;
-    FixedPointTable t(buf_size);
-    reader.prepare(t);
-
-    // Read each point and print it to the screen
-    StreamProcessor writer;
-    Options write_options;
-    write_options.add("filename", "stdout");
-    writer.setOptions(write_options);
-    writer.setInput(reader);
-    writer.prepare(t);
-    writer.execute(t);
-    
-    return 0;
-}
-*/
